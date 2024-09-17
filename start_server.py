@@ -6,8 +6,14 @@ from botbuilder.core import ActivityHandler, TurnContext
 from botbuilder.schema import Activity
 import ngrok
 
+import os
+from dotenv import load_dotenv
+
+# Load variables from .env file
+load_dotenv()
+
 # Set up OpenAI API key
-client = OpenAI(api_key="YOUR_OPENAI_API_KEY")
+client = OpenAI(api_key=os.getenv("YOUR_OPENAI_API_KEY"))
 
 
 
@@ -45,7 +51,7 @@ class MyBot(ActivityHandler):
 from botbuilder.core import BotFrameworkAdapter, BotFrameworkAdapterSettings
 from botbuilder.integration.aiohttp import BotFrameworkHttpClient, BotFrameworkHttpAdapter
 
-settings = BotFrameworkAdapterSettings(app_id="YOUR_APP_ID", app_password="YOUR_APP_PASSWORD")
+settings = BotFrameworkAdapterSettings(app_id=os.getenv("YOUR_APP_ID"), app_password=os.getenv("YOUR_APP_PASSWORD"))
 adapter = BotFrameworkHttpAdapter(settings)
 
 bot = MyBot()
@@ -68,7 +74,7 @@ app.router.add_get("/hi", handle_get)  # Add the GET route
 
 
 if __name__ == "__main__":
-    ngrok.set_auth_token("YOUR_NGROK")
+    ngrok.set_auth_token(os.getenv("YOUR_NGROK"))
     listener = ngrok.forward(3978)
 
 # Output ngrok url to console
