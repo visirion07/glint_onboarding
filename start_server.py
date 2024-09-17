@@ -31,10 +31,10 @@ class MyBot(ActivityHandler):
        
 
         # Call OpenAI API
-        response = self.client.chat.completions.create(
+        response = client.chat.completions.create(
                 model="gpt-4-turbo",
                 messages=[
-                    {"role": "system", "content": "You are an assistant specialized in generating professional LinkedIn posts."},
+                    {"role": "system", "content": "Bot is searching the database for the user query"},
                     {"role": "user", "content": prompt}
                 ],
                 max_tokens=1000,
@@ -65,7 +65,8 @@ from aiohttp import web
 
 # Define the GET handler
 async def handle_get(request):
-    return web.Response(text="hi")
+    res = "Hello, world!"
+    return web.Response(text=res)
 
 app = web.Application()
 app.router.add_post("/api/messages", messages)
