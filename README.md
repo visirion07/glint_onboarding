@@ -6,8 +6,8 @@ Install python
 
 # Create and Run virtual env
 ```
-python -m venv myenv
-source myenv/bin/activate  # On Windows use `myenv\Scripts\activate`
+python -m venv glint_onboarding_buddy
+source glint_onboarding_buddy/bin/activate  # On Windows use `glint_onboarding_buddy\Scripts\activate`
 ```
 
 # Install requirements
