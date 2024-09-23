@@ -1,8 +1,12 @@
 # Install the openai package
 # pip install openai
 
+from azure.identity import ManagedIdentityCredential, DefaultAzureCredential, AzureCliCredential, CertificateCredential
+from msal import ConfidentialClientApplication
+from botbuilder.integration.aiohttp import BotFrameworkHttpAdapter
+from msrestazure.azure_active_directory import MSIAuthentication
 from openai import OpenAI
-from botbuilder.core import ActivityHandler, TurnContext
+from botbuilder.core import ActivityHandler, TurnContext, BotFrameworkAdapterSettings
 from botbuilder.schema import Activity
 import ngrok
 
@@ -15,12 +19,34 @@ load_dotenv()
 # Set up OpenAI API key
 client = OpenAI(api_key=os.getenv("YOUR_OPENAI_API_KEY"))
 
+managed_identity_client_id = os.getenv("MANAGED_IDENTITY_CLIENT_ID")
+# credential = ManagedIdentityCredential(client_id=managed_identity_client_id)
+# credential = MSIAuthentication()
+# credential = AzureCliCredential()
+client_id = os.getenv("BOT_APP_ID")
+# tenant_id = os.getenv("BOT_TENANT_ID")
+# certificate_path = "vgbot-keyvaultlocal-local-20240920.pfx"
+
+# credential = CertificateCredential(tenant_id=tenant_id, client_id=client_id, certificate_path=certificate_path)
+
+# # Function to get access token using Managed Identity
+def get_access_token():
+    tbr = "Bearer " + credential.get_token("https://api.botframework.com/.default").token
+    return tbr
+
+
+# # Custom Bot Adapter that authenticates using Managed Identity
+class CustomBotFrameworkHttpAdapter(BotFrameworkHttpAdapter):
+    async def authenticate_request(self, req):
+        token = get_access_token()
+        req.headers['Authorization'] = token
 
 
 class MyBot(ActivityHandler):
     
     def search_v_db(self, user_query):
         # Search the database for the user query
+        
         return "Here are the search results for your query: " + user_query
 
     async def on_message_activity(self, turn_context: TurnContext):
@@ -51,13 +77,26 @@ class MyBot(ActivityHandler):
 from botbuilder.core import BotFrameworkAdapter, BotFrameworkAdapterSettings
 from botbuilder.integration.aiohttp import BotFrameworkHttpClient, BotFrameworkHttpAdapter
 
-settings = BotFrameworkAdapterSettings(app_id=os.getenv("YOUR_APP_ID"), app_password=os.getenv("YOUR_APP_PASSWORD"))
+# settings = BotFrameworkAdapterSettings(app_id=os.getenv("YOUR_APP_ID"), app_password=os.getenv("YOUR_APP_PASSWORD"))
+settings = BotFrameworkAdapterSettings(app_id=os.getenv("BOT_APP_ID"))
+
 adapter = BotFrameworkHttpAdapter(settings)
+
+# adapter = CustomBotFrameworkHttpAdapter(settings)
 
 bot = MyBot()
 
 async def messages(req):
-    await adapter.process(req, bot.on_turn)
+    body = await req.json()
+    activity = Activity().deserialize(body)
+    auth_header = req.headers.get("Authorization", "")
+    auth_header2 = get_access_token()
+    # print(activity)
+    print("AUTH HEADER", auth_header)
+    print("AUTH HEADER2", auth_header2)
+    print("====================")
+    await adapter.process_activity(activity, auth_header, bot.on_turn)
+    # await adapter.process_activity(activity, bot.on_turn)
 
 # Run the bot
 import aiohttp
